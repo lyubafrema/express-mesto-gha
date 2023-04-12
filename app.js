@@ -8,9 +8,10 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+// добавляем id пользователя ко всем запросам
 app.use((req, res, next) => {
   req.user = {
-    _id: '64355344607eb68f82008f2a'     // добавляем id пользователя ко всем запросам
+    _id: '64355344607eb68f82008f2a',
   };
   next();
 });
@@ -21,14 +22,6 @@ app.use((req, res) => {
   res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
 });
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb')
-.then(() => {
-  console.log('connect mongo');
-})
-.catch((err) => {
-  console.log(`error ${err}`);
-})
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-app.listen(3000, () => {
-  console.log('start server');
-})
+app.listen(3000);
