@@ -22,7 +22,10 @@ const createUser = (req, res) => {
 const getUser = (req, res) => {
   User.findById(req.params.userId)
   .then((user) => {
-    res.send(user);
+    if (user) {
+      return res.send(user)
+    }
+    return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound)
   })
   .catch((error) => {
     if (error.name === 'CastError') {

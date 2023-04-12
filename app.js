@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const router = require('./routes');
+const { ERROR_NOT_FOUND, errorMessageNotFound } = require('./utils/constants');
 
 const app = express();
 
@@ -13,6 +14,11 @@ app.use((req, res, next) => {
   };
   next();
 });
+
+app.use((req, res, next) => {
+  res.status(ERROR_NOT_FOUND).send(errorMessageNotFound)
+  next();
+})
 
 app.use(router);
 

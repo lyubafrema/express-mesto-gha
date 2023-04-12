@@ -37,12 +37,15 @@ const getCards = (req, res) => {
 // удаляем карточку
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-  .then((cards) => {
-    res.send(cards);
+  .then((card) => {
+    if(card) {
+      return res.send(card)
+    }
+    return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
   })
   .catch((error) => {
     if (error.name === 'CastError') {
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
+      return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     } else {
       return res.status(ERROR_DEFAULT).send(errorMessageDefault)
     }
@@ -57,14 +60,17 @@ const likeCard = (req, res) => {
   { new: true },
   )
   .then((card) => {
-    res.send(card);
+    if(card) {
+      return res.send(card)
+    }
+      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
   })
   .catch((error) => {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     }
     if (error.name === 'CastError') {
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
+      return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     } else {
       return res.status(ERROR_DEFAULT).send(errorMessageDefault)
     }
@@ -79,14 +85,18 @@ const dislikeCard = (req, res) => {
   { new: true },
   )
   .then((card) => {
-    res.send(card);
+    if(card) {
+      return res.send(card)
+    }
+    return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
   })
   .catch((error) => {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     }
     if (error.name === 'CastError') {
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId)
+      console.log(error.name);
+      return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     } else {
       return res.status(ERROR_DEFAULT).send(errorMessageDefault)
     }
