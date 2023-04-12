@@ -32,7 +32,7 @@ const getUser = (req, res) => {
   })
   .catch((error) => {
     if (error.name === 'CastError') {
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound)
+      return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect)
     } else {
       return res.status(ERROR_DEFAULT).send(errorMessageDefault)
     }

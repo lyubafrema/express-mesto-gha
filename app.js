@@ -17,6 +17,10 @@ app.use((req, res, next) => {
 
 app.use(router);
 
+app.use((req, res) => {
+  res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+});
+
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb')
 .then(() => {
   console.log('connect mongo');
