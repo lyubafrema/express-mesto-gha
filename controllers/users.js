@@ -48,12 +48,7 @@ const getUsers = (req, res) => {
       }
       return res.send(users);
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-      }
-      return res.status(ERROR_DEFAULT).send(errorMessageDefault);
-    });
+    .catch(() => res.status(ERROR_DEFAULT).send(errorMessageDefault));
 };
 
 // обновляем информацию профиля
