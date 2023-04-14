@@ -5,8 +5,8 @@ const {
   ERROR_DEFAULT,
   errorMessageDefault,
   ERROR_NOT_FOUND,
-  errorMessageNotFound,
   errorMessageNotFoundId,
+  errorMessageNotFound,
 } = require('../utils/constants');
 
 // создаем карточку
@@ -30,11 +30,14 @@ const createCard = (req, res) => {
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => {
-      res.send(cards);
+      if (!cards) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      }
+      return res.send(cards);
     })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      if (error.name === 'ValidationError') {
+        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
       }
       return res.status(ERROR_DEFAULT).send(errorMessageDefault);
     });
@@ -44,10 +47,10 @@ const getCards = (req, res) => {
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
-      if (card) {
-        return res.send(card);
+      if (!card) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
       }
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
+      return res.send(card);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -65,10 +68,10 @@ const likeCard = (req, res) => {
     { new: true },
   )
     .then((card) => {
-      if (card) {
-        return res.send(card);
+      if (!card) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
       }
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
+      return res.send(card);
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -89,10 +92,10 @@ const dislikeCard = (req, res) => {
     { new: true },
   )
     .then((card) => {
-      if (card) {
-        return res.send(card);
+      if (!card) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
       }
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFoundId);
+      return res.send(card);
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {

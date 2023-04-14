@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const router = require('./routes');
@@ -6,6 +7,7 @@ const { ERROR_NOT_FOUND, errorMessageNotFound } = require('./utils/constants');
 
 const app = express();
 
+app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // добавляем id пользователя ко всем запросам

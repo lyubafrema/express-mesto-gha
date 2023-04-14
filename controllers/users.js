@@ -13,12 +13,7 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((newUser) => {
-      if (newUser) {
-        return res.send(newUser);
-      }
-      return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-    })
+    .then((newUser) => res.send(newUser))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
@@ -31,10 +26,10 @@ const createUser = (req, res) => {
 const getUser = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
-      if (user) {
-        return res.send(user);
+      if (!user) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
       }
-      return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      return res.send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -48,11 +43,14 @@ const getUser = (req, res) => {
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.send(users);
+      if (!users) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      }
+      return res.send(users);
     })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      if (error.name === 'ValidationError') {
+        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
       }
       return res.status(ERROR_DEFAULT).send(errorMessageDefault);
     });
@@ -64,12 +62,15 @@ const updateProfile = (req, res) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(_id, { name, about }, { new: true, runValidators: true })
-    .then((updatedUser) => {
-      res.send(updatedUser);
+    .then((user) => {
+      if (!user) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      }
+      return res.send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
       }
       if (error.name === 'ValidationError') {
         return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
@@ -84,12 +85,15 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(_id, { avatar }, { new: true, runValidators: true })
-    .then((updatedUser) => {
-      res.send(updatedUser);
+    .then((user) => {
+      if (!user) {
+        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+      }
+      return res.send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
       }
       if (error.name === 'ValidationError') {
         return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
