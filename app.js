@@ -8,7 +8,7 @@ const router = require('./routes');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const defaultErr = require('./errors/default-err');
-const { urlRegEx, errorMessageNotFound } = require('./utils/constants');
+const { urlRegEx } = require('./utils/constants');
 
 const app = express();
 
