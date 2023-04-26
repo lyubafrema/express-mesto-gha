@@ -11,9 +11,6 @@ usersRouter.patch(
     body: Joi.object().keys({
       avatar: Joi.string().required().pattern(urlRegEx),
     }).unknown(true),
-    user: Joi.object().keys({
-      _id: Joi.string().alphanum().length(24),
-    }).unknown(true),
   }),
   updateAvatar,
 );
@@ -25,22 +22,11 @@ usersRouter.patch(
       name: Joi.string().required().min(2).max(30),
       about: Joi.string().required().min(2).max(30),
     }).unknown(true),
-    user: Joi.object().keys({
-      _id: Joi.string().alphanum().length(24),
-    }).unknown(true),
   }),
   updateProfile,
 );
 
-usersRouter.get(
-  '/me',
-  celebrate({
-    user: Joi.object().keys({
-      _id: Joi.string().alphanum().length(24),
-    }).unknown(true),
-  }),
-  getCurrentUser,
-);
+usersRouter.get('/me', getCurrentUser);
 
 usersRouter.get(
   '/:userId',
