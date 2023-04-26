@@ -8,13 +8,27 @@ const router = require('./routes');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const defaultErr = require('./errors/default-err');
-const { urlRegEx } = require('./utils/constants');
+const { urlRegEx, errorMessageNotFound } = require('./utils/constants');
 
 const app = express();
 
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post(
+  '/signup',
+  celebrate({
+    body: Joi.object().keys({
+      name: Joi.string().min(2).max(30),
+      about: Joi.string().min(2).max(30),
+      avatar: Joi.string().regex(urlRegEx),
+      email: Joi.string().required().email(),
+      password: Joi.string().required(),
+    }).unknown(true),
+  }),
+  createUser,
+);
 
 app.post(
   '/signin',
@@ -27,28 +41,14 @@ app.post(
   login,
 );
 
-app.post(
-  '/signup',
-  celebrate({
-    body: Joi.object().keys({
-      name: Joi.string().min(2).max(30),
-      about: Joi.string().min(2).max(30),
-      avatar: Joi.string().pattern(urlRegEx),
-      email: Joi.string().required().email(),
-      password: Joi.string().required(),
-    }).unknown(true),
-  }),
-  createUser,
-);
-
 app.use(auth);
 app.use(router);
 
-// app.use((req, res) => {
-//   res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
-// });
-
 app.use(errors());
+
+app.use((req, res) => {
+  res.status(404).send(errorMessageNotFound);
+});
 
 app.use(defaultErr);
 

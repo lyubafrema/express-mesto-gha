@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     validate: {
-      validator: (value) => isEmail(value),
-      message: 'Неверный формат email',
+      validator: (value) => urlRegEx.test(value),
+      message: 'Невалидная ссылка',
     },
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
   },
@@ -28,8 +28,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validator: (value) => urlRegEx.test(value),
-      message: 'Невалидная ссылка',
+      validator: (value) => isEmail(value),
+      message: 'Неверный формат email',
     },
   },
   password: {

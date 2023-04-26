@@ -17,17 +17,28 @@ const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-
-  bcrypt.hash(password, 10) // хешируем пароль
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash, // записываем хеш в базу
-    }))
-    .then((newUser) => res.status(201).send(newUser))
-    .catch((error) => {
-      if (error.code === 11000) {
-        next(new ConflictError(errorMessageConflict));
-      }
-    });
+  bcrypt.hash(password, 10).then((hash) => {
+    User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    })
+      .then((newUser) => {
+        res.status(201).send({
+          name: newUser.name,
+          about: newUser.about,
+          avatar: newUser.avatar,
+          email: newUser.email,
+        });
+      })
+      .catch((error) => {
+        if (error.code === 11000) {
+          next(new ConflictError(errorMessageConflict));
+        }
+      });
+  });
 };
 
 // аутентификация
