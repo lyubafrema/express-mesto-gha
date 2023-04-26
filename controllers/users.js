@@ -1,104 +1,134 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
-  ERROR_BAD_REQUEST,
-  errorMessageIncorrect,
-  ERROR_DEFAULT,
-  errorMessageDefault,
-  ERROR_NOT_FOUND,
   errorMessageNotFound,
+  errorMessageUnauthorized,
+  errorMessageConflict,
+  errorForbidden,
 } = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-err');
+const UnauthorizedError = require('../errors/unauthorized-err');
+const ConflictError = require('../errors/conflict-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 // создаем пользователя
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
-  User.create({ name, about, avatar })
-    .then((newUser) => res.send(newUser))
+  bcrypt.hash(password, 10) // хешируем пароль
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash, // записываем хеш в базу
+    }))
+    .then((newUser) => res.status(201).send(newUser))
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
+      if (error.code === 11000) {
+        next(new ConflictError(errorMessageConflict));
       }
-      return res.status(ERROR_DEFAULT).send(errorMessageDefault);
     });
 };
 
-// получаем пользователя по id
-const getUser = (req, res) => {
-  User.findById(req.params.userId)
+// аутентификация
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        throw new UnauthorizedError(errorMessageUnauthorized);
+      }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            next(new UnauthorizedError(errorMessageUnauthorized));
+          }
+          const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+          return res.send({ token });
+        });
+    })
+    .catch(next);
+};
+
+// получаем текущего пользователя
+const getCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError(errorMessageNotFound);
       }
       return res.send(user);
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
+    .catch(next);
+};
+
+// получаем пользователя по id
+const getUser = (req, res, next) => {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError(errorMessageNotFound);
       }
-      return res.status(ERROR_DEFAULT).send(errorMessageDefault);
-    });
+      return res.send(user);
+    })
+    .catch(next);
 };
 
 // получаем всех пользователей
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       if (!users) {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        throw new NotFoundError(errorMessageNotFound);
       }
       return res.send(users);
     })
-    .catch(() => res.status(ERROR_DEFAULT).send(errorMessageDefault));
+    .catch(next);
 };
 
 // обновляем информацию профиля
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const { _id } = req.user;
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(_id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        throw new NotFoundError(errorMessageNotFound);
+      }
+      // проверяем права пользователя на изменение профиля
+      if (req.params.userId !== req.user._id) {
+        throw new ForbiddenError(errorForbidden);
       }
       return res.send(user);
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-      }
-      if (error.name === 'ValidationError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-      }
-      return res.status(ERROR_DEFAULT).send(errorMessageDefault);
-    });
+    .catch(next);
 };
 
 // обновляем аватар
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { _id } = req.user;
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(_id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(ERROR_NOT_FOUND).send(errorMessageNotFound);
+        throw new NotFoundError(errorMessageNotFound);
+      }
+      // проверяем права пользователя на изменение аватара
+      if (req.params.userId !== req.user._id) {
+        throw new ForbiddenError(errorForbidden);
       }
       return res.send(user);
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-      }
-      if (error.name === 'ValidationError') {
-        return res.status(ERROR_BAD_REQUEST).send(errorMessageIncorrect);
-      }
-      return res.status(ERROR_DEFAULT).send(errorMessageDefault);
-    });
+    .catch(next);
 };
 
 module.exports = {
   createUser,
+  login,
+  getCurrentUser,
   getUser,
   getUsers,
   updateAvatar,
