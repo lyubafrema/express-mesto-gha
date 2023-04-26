@@ -47,7 +47,7 @@ app.use(router);
 app.use(errors());
 
 app.use((req, res) => {
-  res.status(404).send(errorMessageNotFound);
+  res.status(404).send({ message: 'Error 404: Страница не найдена' });
 });
 
 app.use(defaultErr);

@@ -5,12 +5,10 @@ const {
   errorMessageNotFound,
   errorMessageUnauthorized,
   errorMessageConflict,
-  errorForbidden,
 } = require('../utils/constants');
 const NotFoundError = require('../errors/not-found-err');
 const UnauthorizedError = require('../errors/unauthorized-err');
 const ConflictError = require('../errors/conflict-err');
-const ForbiddenError = require('../errors/forbidden-err');
 
 // создаем пользователя
 const createUser = (req, res, next) => {
@@ -108,10 +106,6 @@ const updateProfile = (req, res, next) => {
       if (!user) {
         throw new NotFoundError(errorMessageNotFound);
       }
-      // проверяем права пользователя на изменение профиля
-      if (req.params.userId !== req.user._id) {
-        throw new ForbiddenError(errorForbidden);
-      }
       return res.send(user);
     })
     .catch(next);
@@ -126,10 +120,6 @@ const updateAvatar = (req, res, next) => {
     .then((user) => {
       if (!user) {
         throw new NotFoundError(errorMessageNotFound);
-      }
-      // проверяем права пользователя на изменение аватара
-      if (req.params.userId !== req.user._id) {
-        throw new ForbiddenError(errorForbidden);
       }
       return res.send(user);
     })
