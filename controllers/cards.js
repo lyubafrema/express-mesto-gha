@@ -41,7 +41,7 @@ const deleteCard = (req, res, next) => Card.findById(req.params.cardId)
     if (!card) {
       throw new NotFoundError(errorMessageNotFound);
     }
-    if (!card.owner.toString().equals(req.user._id)) {
+    if (card.owner.toString() !== (req.user._id)) {
       throw new ForbiddenError(errorForbidden);
     }
     card.deleteOne()
