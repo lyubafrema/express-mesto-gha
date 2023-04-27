@@ -5,10 +5,12 @@ const {
   errorMessageNotFound,
   errorMessageUnauthorized,
   errorMessageConflict,
+  errorMessageIncorrect,
 } = require('../utils/constants');
 const NotFoundError = require('../errors/not-found-err');
 const UnauthorizedError = require('../errors/unauthorized-err');
 const ConflictError = require('../errors/conflict-err');
+const BadRequestError = require('../errors/bad-request-err');
 
 // создаем пользователя
 const createUser = (req, res, next) => {
@@ -31,12 +33,18 @@ const createUser = (req, res, next) => {
           email: newUser.email,
         });
       })
-      .catch((error) => {
-        if (error.code === 11000) {
+      .catch((err) => {
+        if (err.code === 11000) {
           next(new ConflictError(errorMessageConflict));
         }
+        if (err.name === 'ValidationError') {
+          next(new BadRequestError(errorMessageIncorrect));
+        } else {
+          next(err);
+        }
       });
-  });
+  })
+    .catch(next);
 };
 
 // аутентификация
@@ -51,7 +59,7 @@ const login = (req, res, next) => {
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            next(new UnauthorizedError(errorMessageUnauthorized));
+            return next(new UnauthorizedError(errorMessageUnauthorized));
           }
           const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
           return res.send({ token });
@@ -87,12 +95,7 @@ const getUser = (req, res, next) => {
 // получаем всех пользователей
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => {
-      if (!users) {
-        throw new NotFoundError(errorMessageNotFound);
-      }
-      return res.send(users);
-    })
+    .then((users) => res.send(users))
     .catch(next);
 };
 
@@ -108,7 +111,13 @@ const updateProfile = (req, res, next) => {
       }
       return res.send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(errorMessageIncorrect));
+      } else {
+        next(err);
+      }
+    });
 };
 
 // обновляем аватар
@@ -123,7 +132,13 @@ const updateAvatar = (req, res, next) => {
       }
       return res.send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(errorMessageIncorrect));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports = {

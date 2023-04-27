@@ -6,8 +6,9 @@ const errorMessageNotFoundId = 'Id не найден';
 const errorMessageConflict = 'Такой email уже используется';
 const errorForbidden = 'Ошибка доступа';
 
-// регулярное выражение для проверки URL
-const urlRegEx = /^(http|https):\/\/(www.)?[^ "]+$/;
+const okCode = 200;
+
+const urlRegEx = /^((http|https):\/\/)(www.)?[a-zA-Z0-9@:%._\\+~#?&\\=-]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\\+~#?&\\=]*)((\/[a-zA-Z0-9@:%._\\+~#?&\\=-]{2,256})*)?/;
 
 module.exports = {
   errorMessageIncorrect,
@@ -16,5 +17,6 @@ module.exports = {
   errorMessageNotFoundId,
   errorMessageConflict,
   errorForbidden,
+  okCode,
   urlRegEx,
 };

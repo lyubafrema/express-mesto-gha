@@ -1,10 +1,13 @@
+const BadRequestError = require('../errors/bad-request-err');
 const ForbiddenError = require('../errors/forbidden-err');
 const NotFoundError = require('../errors/not-found-err');
 const Card = require('../models/card');
 const {
   errorMessageNotFoundId,
-  errorMessageNotFound,
   errorForbidden,
+  errorMessageIncorrect,
+  okCode,
+  errorMessageNotFound,
 } = require('../utils/constants');
 
 // создаем карточку
@@ -16,36 +19,42 @@ const createCard = (req, res, next) => {
     .then((newCard) => {
       res.status(201).send(newCard);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(errorMessageIncorrect));
+      } else {
+        next(err);
+      }
+    });
 };
 
 // получаем все карточки
 const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => {
-      if (!cards) {
-        throw new NotFoundError(errorMessageNotFound);
-      }
-      return res.send(cards);
-    })
+    .then((cards) => res.send(cards))
     .catch(next);
 };
 
 // удаляем карточку
-const deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError(errorMessageNotFoundId);
-      }
-      // проверяем права пользователя на удаление карточки
-      if (card.owner.toString() !== req.user._id) {
-        throw new ForbiddenError(errorForbidden);
-      }
-      return res.send(card);
-    })
-    .catch(next);
-};
+const deleteCard = (req, res, next) => Card.findById(req.params.cardId)
+  .then((card) => {
+    if (!card) {
+      throw new NotFoundError(errorMessageNotFound);
+    }
+    if (!card.owner.toString().equals(req.user._id)) {
+      throw new ForbiddenError(errorForbidden);
+    }
+    card.deleteOne()
+      .then(() => res.status(okCode).send({ message: 'Карточка удалена.' }))
+      .catch(next);
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
+      next(new BadRequestError(errorMessageIncorrect));
+    } else {
+      next(err);
+    }
+  });
 
 // ставим лайк
 const likeCard = (req, res, next) => {
